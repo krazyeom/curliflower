@@ -19,6 +19,10 @@
   "build": {
     "appId": "com.krazyeom.curliflower",
     "productName": "Curliflower",
+    "files": [
+      "**/*",
+      ".env"
+    ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "logo.png"
