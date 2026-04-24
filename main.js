@@ -7,8 +7,6 @@ const axios = require('axios');
 const { machineIdSync } = require('node-machine-id');
 const { createClient } = require('@supabase/supabase-js');
 
-require('dotenv').config();
-
 const store = new Store();
 const curliflowerAutoLauncher = new AutoLaunch({
   name: 'Curliflower',
@@ -16,8 +14,8 @@ const curliflowerAutoLauncher = new AutoLaunch({
 });
 
 // --- Supabase Auth Settings ---
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const SUPABASE_URL = 'https://fdcmiqwbihbubsrjhwxy.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_BeiX5hATlw17EqyFw0aiBw_8twbWoYa';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const hwid = machineIdSync();
 // ------------------------------
