@@ -1,61 +1,67 @@
-# 🌸 Curliflower (컬리플라워)
+# 🌸 Curliflower
 
-**Curliflower**는 복잡한 네트워크 요청(cURL/fetch)을 저장하고, 컴퓨터 시작 시 자동으로 실행해주는 프리미엄 자동화 도구입니다.
+**Curliflower** is a premium cross-platform desktop application designed for high-performance network request automation. It allows users to manage, automate, and monitor multiple `fetch()` and `cURL` commands with ease, specifically featuring automatic execution on system startup.
+
+[![Korean README](https://img.shields.io/badge/Language-Korean-blue)](README_ko.md)
 
 ---
 
-## 📅 Event Kiki 자동 출석 체크 가이드
+## ✨ Key Features
+
+- **Bulk Request Management**: Paste multiple commands at once and let our smart parser handle the complexity.
+- **System Startup Automation**: Automatically triggers your request queue as soon as your computer starts.
+- **Smart Formatting**: Advanced support for Chrome and Safari-style cURL commands (automatically handles flags like `--data-raw`).
+- **Sequential Execution**: Requests are processed one-by-one with a 5-second delay to ensure reliability and bypass rate limits.
+- **Real-time Monitoring**: Integrated log viewer to track status codes, response data, and execution duration.
+- **Custom Labels (Memos)**: Add personalized memos to your requests for better organization.
+- **Premium UI/UX**: Modern dark-themed interface with glassmorphism and smooth animations.
+
+---
+
+## 📅 Event Kiki Auto Check-in Guide
+
+Follow these steps to automate daily attendance on Event Kiki or similar event pages:
 
 ![Event Kiki Guide Screenshot](guide.png)
 
-Event Kiki 등 이벤트 페이지의 자동 출석 체크를 설정하는 방법입니다. 아래 순서대로 따라 하시면 매일 아침 자동으로 출석이 완료됩니다.
+### 🔍 Step 1: Extract Network Request (Chrome)
+1. Open your browser and press **F12** to open Developer Tools.
+2. Go to the **Network** tab and filter for `pick` (or `checklog` if you already checked in).
+3. Click the event button (e.g., Click!, Spin) on the website.
+4. Right-click the filtered request and select **Copy** -> **Copy as cURL**.
 
-### 🔍 1단계: 네트워크 요청 추출하기 (Chrome)
+### 📝 Step 2: Modify Command
+5. Paste the content into a text editor.
+6. If you copied `checklog`, change that word in the URL to `pickrwd`.
+7. Copy the entire modified string.
 
-0. 크롬 브라우저에서 해당 이벤트 페이지를 열고 **F12**를 누릅니다.
-1. 상단 메뉴에서 **Network(네트워크)** 탭을 클릭합니다.
-2. 필터(Filter) 창에 그날 최초라면 `pick`, 이미 완료했다면 `checklog`를 입력합니다.
-3. 이벤트 버튼(예: Click!, 룰렛 돌리기 등)을 클릭합니다.
-4. 필터링된 결과물 중 `pick` 또는 `checklog` 항목을 찾습니다.
-5. 해당 항목을 클릭하여 **Request Method**가 **POST**인지 확인합니다.
-6. 해당 항목 위에서 마우스 오른쪽 버튼을 클릭하여 **Copy** -> **Copy as cURL**을 선택합니다.
-
-### 📝 2단계: 명령어 수정 (중요!)
-
-7. 메모장에 복사한 내용을 붙여넣습니다.
-8. 만약 `checklog`로 복사했다면, 주소창의 `checklog` 부분을 `pickrwd`로 수정합니다.
-   - 예: `.../v1/ekiki/mg/checklog` -> `.../v1/ekiki/mg/pickrwd`
-9. 수정된 전체 텍스트를 복사합니다.
-
-### 🚀 3단계: Curliflower 앱에 등록하기
-
-10. **Curliflower** 앱을 실행합니다.
-11. 오른쪽 상단의 **+ Add Request** 버튼을 누릅니다.
-12. 나타나는 입력창에 복사한 텍스트를 붙여넣습니다.
-13. **Add to Queue** 버튼을 눌러 목록에 추가합니다.
-14. 왼쪽 메뉴에서 **Run All Now** 또는 개별 **Run** 기능을 눌러 정상적으로 동작하는지 테스트합니다.
-15. **Launch at Startup** 스위치를 켜서 매일 자동 실행되도록 설정합니다.
+### 🚀 Step 3: Register in Curliflower
+8. Open **Curliflower** and click **+ Add Request**.
+9. Paste your command and add a memo (e.g., "Event Kiki Daily").
+10. Click **Add to Queue** and test it with the **Run** button.
+11. Enable **Launch at Startup** in the sidebar for daily automation.
 
 ---
 
-## 💻 빌드 및 실행
+## 💻 Development & Build
 
-### 개발 환경 실행
+### Development
 ```bash
 npm install
 npm start
 ```
 
-### Windows/Mac용 설치 파일 빌드
+### Build (Windows & macOS)
 ```bash
 npm run build
 ```
 
 ---
 
-## ⚖️ 저작권 및 감사 인사
+## ⚖️ Credits & Copyright
 
-- **제작**: [krazyeom](https://github.com/krazyeom) & [그래염 (LTC)](https://cafe.naver.com/hexenyang)
+- **Developed by**: [krazyeom](https://github.com/krazyeom) & **그래염 (LTC)**
+- **LTC Community**: [https://cafe.naver.com/hexenyang](https://cafe.naver.com/hexenyang)
 
 ---
 *Made with ❤️ by krazyeom & 그래염*
