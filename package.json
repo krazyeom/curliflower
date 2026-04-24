@@ -1,0 +1,44 @@
+{
+  "name": "curliflower",
+  "version": "1.0.0",
+  "main": "main.js",
+  "description": "Premium multi-request automation tool for fetch and curl.",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --mac",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:all": "electron-builder --win --mac",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "krazyeom",
+  "build": {
+    "appId": "com.krazyeom.curliflower",
+    "productName": "Curliflower",
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "logo.png"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "logo.png"
+    }
+  },
+  "dependencies": {
+    "auto-launch": "^5.0.6",
+    "axios": "^1.15.2",
+    "electron-store": "^8.1.0",
+    "parse-curl": "^0.2.6"
+  },
+  "devDependencies": {
+    "electron": "^41.2.2",
+    "electron-builder": "^26.8.1"
+  }
+}

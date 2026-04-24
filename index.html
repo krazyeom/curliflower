@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curliflower</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-section">
+                <img src="logo.png" alt="Logo" class="logo-img">
+                <h1>Curliflower</h1>
+            </div>
+            <nav>
+                <div class="nav-item active" id="nav-commands" onclick="showTab('commands')">
+                    <span class="icon">📋</span> Queue
+                </div>
+                <div class="nav-item" id="nav-guide" onclick="showTab('guide')">
+                    <span class="icon">📖</span> Guide
+                </div>
+                <div class="setting-item">
+                    <div class="setting-label">
+                        <span class="icon">🚀</span> Launch at Startup
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="autolaunch-toggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="run-all-btn" class="btn primary">Run All Now</button>
+                <div class="copyright-section">
+                    <p>Made by <a href="#" onclick="openLink('https://github.com/krazyeom')">krazyeom</a> & <a href="#" onclick="openLink('https://cafe.naver.com/hexenyang')">그래염 (LTC)</a></p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Global Status Bar -->
+            <div id="status-bar" class="status-bar" style="display: none;">
+                <div class="status-label">
+                    <span id="status-text">Running Queue...</span>
+                    <span id="status-count">0/0</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <div id="command-view">
+                <header class="content-header">
+                    <h2>Request Queue</h2>
+                    <button id="add-command-btn" class="btn secondary">+ Add Request</button>
+                </header>
+                
+                <div id="command-list" class="command-list">
+                    <!-- Commands will be injected here -->
+                    <div class="empty-state">
+                        <div class="empty-icon">📂</div>
+                        <p>No commands added yet.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="guide-view" style="display: none;">
+                <header class="content-header">
+                    <h2>Event Kiki 자동 출석 체크 가이드 (전체 과정)</h2>
+                </header>
+                <div class="guide-content">
+                    <img src="guide.png" alt="Guide" class="guide-main-img">
+                    
+                    <section class="guide-section">
+                        <div class="guide-step"><div class="step-num">00</div><p>크롬 브라우저에서 <b>F12</b>를 누릅니다.</p></div>
+                        <div class="guide-step"><div class="step-num">01</div><p>상단 메뉴에서 <b>Network(네트워크)</b> 탭을 누릅니다.</p></div>
+                        <div class="guide-step"><div class="step-num">02</div><p>필터에서 그날 최초는 <code>pick</code>, 이미 했다면 <code>checklog</code>를 입력합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">03</div><p>페이지의 이벤트 버튼을 클릭합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">04</div><p>필터링된 결과에서 <code>pick</code> 또는 <code>checklog</code> 항목을 확인합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">05</div><p>해당 요청의 Method가 <b>POST</b>여야 합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">06</div><p>항목 위에서 우클릭 후 <b>Copy</b> 메뉴로 이동합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">07</div><p><b>Copy as cURL</b>을 클릭합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">08</div><p>복사한 내용을 메모장에 붙여넣습니다.</p></div>
+                        <div class="guide-step"><div class="step-num">09</div><p><code>checklog</code>로 복사했다면, 해당 단어를 <code>pickrwd</code>로 교체합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">10</div><p>수정된 전체 글자를 다시 복사합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">11</div><p>Curliflower 앱을 실행합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">12</div><p><b>+ Add Request</b> 버튼을 누릅니다.</p></div>
+                        <div class="guide-step"><div class="step-num">13</div><p>입력창에 10번에서 복사한 글자를 붙여넣습니다.</p></div>
+                        <div class="guide-step"><div class="step-num">14</div><p><b>Add to Queue</b> 버튼을 눌러 추가합니다.</p></div>
+                        <div class="guide-step"><div class="step-num">15</div><p><b>Run</b> 또는 <b>Run All Now</b>를 눌러 테스트해 봅니다.</p></div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for adding commands -->
+    <div id="add-modal" class="modal">
+        <div class="modal-content">
+            <h3>Add New Command</h3>
+            <p class="subtitle">Paste your fetch() code or curl command below</p>
+            <textarea id="command-input" placeholder="fetch('...') or curl '...'"></textarea>
+            <input type="text" id="command-memo" placeholder="Memo (e.g. Daily Check-in)" style="width: 100%; margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: var(--radius); color: white;">
+            <div class="modal-actions">
+                <button id="close-modal-btn" class="btn ghost">Cancel</button>
+                <button id="save-command-btn" class="btn primary">Add to Queue</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <script src="renderer.js"></script>
+</body>
+</html>
