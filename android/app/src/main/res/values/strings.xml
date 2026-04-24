@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Curliflower</string>
+    <string name="title_activity_main">Curliflower</string>
+    <string name="package_name">com.krazyeom.curliflower</string>
+    <string name="custom_url_scheme">com.krazyeom.curliflower</string>
+</resources>

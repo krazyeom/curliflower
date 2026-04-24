@@ -111,45 +111,7 @@
         </div>
     </div>
 
-    <!-- Authentication Overlay -->
-    <div id="auth-overlay" class="modal auth-overlay" style="display: none;">
-        <div class="modal-content auth-content">
-            <div class="auth-header">
-                <div class="auth-logo">LTC</div>
-                <h2>Premium Activation</h2>
-            </div>
-            <p class="subtitle">LTC 카페 ID를 입력하고 승인을 요청하세요.</p>
-            
-            <div class="auth-form">
-                <div class="input-group">
-                    <label for="cafe-id-input">LTC Cafe ID</label>
-                    <input type="text" id="cafe-id-input" placeholder="예: krazyeom">
-                </div>
-                <div id="hwid-container" class="hwid-container">
-                    <label>Device ID (ltc ID)</label>
-                    <code id="hwid-display">Generating...</code>
-                    <button class="btn ghost btn-sm" onclick="copyHWID()">Copy</button>
-                </div>
-                
-                <button id="btn-request-auth" class="btn primary full-width">인증 요청 및 확인</button>
-                <div id="auth-status-msg" class="auth-status-msg"></div>
-            </div>
-            
-            <div class="auth-footer">
-                <p>승인 요청 후 관리자(그래염)의 승인을 기다려주세요.</p>
-                <p class="small-text">기기 고유 ID와 카페 ID가 연동되어 중복 사용이 방지됩니다.</p>
-            </div>
-        </div>
-    </div>
-
     <div id="toast" class="toast"></div>
     <script src="renderer.js"></script>
-    <script>
-        function copyHWID() {
-            const hwid = document.getElementById('hwid-display').innerText;
-            navigator.clipboard.writeText(hwid);
-            alert('Device ID copied to clipboard');
-        }
-    </script>
 </body>
 </html>

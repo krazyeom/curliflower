@@ -9,6 +9,10 @@
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "build:all": "electron-builder --win --mac",
+    "android:prepare": "mkdir -p www && cp index.html style.css renderer.js bridge.js logo.png guide.png www/",
+    "android:sync": "npx cap sync",
+    "android:build": "npm run android:prepare && npm run android:sync",
+    "android:open": "npx cap open android",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "krazyeom",
@@ -32,9 +36,17 @@
     }
   },
   "dependencies": {
+    "@capacitor-community/http": "^1.4.1",
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/cli": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/preferences": "^8.0.1",
+    "@supabase/supabase-js": "^2.104.1",
     "auto-launch": "^5.0.6",
     "axios": "^1.15.2",
+    "dotenv": "^17.4.2",
     "electron-store": "^8.1.0",
+    "node-machine-id": "^1.1.12",
     "parse-curl": "^0.2.6"
   },
   "devDependencies": {
