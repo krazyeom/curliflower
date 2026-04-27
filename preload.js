@@ -12,4 +12,6 @@ contextBridge.exposeInMainWorld('api', {
   authRequest: (cafeId) => ipcRenderer.invoke('auth-request', cafeId),
   getStoredAuth: () => ipcRenderer.invoke('get-stored-auth'),
   logoutAuth: () => ipcRenderer.invoke('logout-auth'),
+  getProxy: () => ipcRenderer.invoke('get-proxy'),
+  setProxy: (url) => ipcRenderer.invoke('set-proxy', url),
 });

@@ -201,6 +201,8 @@ nav {
     flex-direction: column;
     gap: 12px;
     transition: transform 0.2s;
+    overflow: hidden; /* Added: Prevents anything from escaping the card */
+    word-break: break-all; /* Added: Force wrap long text */
 }
 
 .command-card:hover {
@@ -231,18 +233,14 @@ nav {
     font-size: 1.1rem;
     font-weight: 600;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-all; /* Allow wrapping */
 }
 
 .command-url-text {
     font-size: 0.85rem;
     color: var(--text-secondary);
     opacity: 0.7;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-all; /* Allow wrapping */
 }
 
 .method-badge {
@@ -462,6 +460,7 @@ textarea#command-input:focus {
 }
 
 /* Status Bar */
+
 .status-bar {
     background: var(--bg-sidebar);
     border: 1px solid var(--accent);
@@ -533,6 +532,173 @@ textarea#command-input:focus {
     100% { transform: scale(1); }
 }
 
+/* Settings View Styles */
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.settings-section {
+    background: var(--bg-card);
+    padding: 24px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.settings-section h3 {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-actions {
+    margin-top: 20px;
+}
+
+.info-box {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(52, 152, 219, 0.1);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: #3498db;
+}
+
+.account-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.highlight {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* --- Mobile Responsive Layout --- */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+    }
+
+    /* Transform Sidebar to Bottom Nav */
+    .sidebar {
+        width: 100% !important;
+        height: 70px !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        z-index: 1000;
+        flex-direction: row !important;
+        padding: 0 16px !important;
+        border-right: none !important;
+        border-top: 1px solid var(--border);
+        background-color: var(--bg-sidebar);
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.2);
+    }
+
+    .logo-section, .sidebar-footer .copyright-section, .setting-item {
+        display: none !important; /* Hide logo and copyright on mobile nav */
+    }
+
+    .sidebar nav {
+        flex-direction: row !important;
+        width: 100%;
+        justify-content: space-around;
+        align-items: center;
+        gap: 0 !important;
+    }
+
+    .nav-item {
+        flex-direction: column !important;
+        gap: 4px !important;
+        font-size: 0.7rem !important;
+        padding: 8px !important;
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .nav-item .icon {
+        font-size: 1.4rem !important;
+        margin: 0 !important;
+    }
+
+    .sidebar-footer {
+        display: none !important; /* Hide footer buttons on mobile sidebar */
+    }
+
+    /* Show Run All button in the main content area for mobile */
+    .mobile-actions {
+        display: flex !important;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    /* Main Content Adjustments */
+    .main-content {
+        padding: 16px !important;
+        padding-bottom: 90px !important; /* Extra padding for bottom nav */
+        overflow-x: hidden;
+    }
+
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .content-header h2 {
+        font-size: 1.4rem;
+    }
+
+    .content-header .btn {
+        width: 100%; /* Full width button on mobile */
+    }
+
+    /* Command Card Adjustments */
+    .command-card {
+        padding: 16px;
+    }
+
+    .command-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .command-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .command-actions .btn {
+        flex: 1;
+        padding: 8px;
+    }
+
+    /* Modal Adjustments */
+    .modal-content {
+        width: 95% !important;
+        margin: 5% auto !important;
+        padding: 20px !important;
+    }
+
+    textarea#command-input {
+        height: 150px;
+    }
+}
+
+/* Default state for mobile-only elements */
+.mobile-actions {
+    display: none;
+}
+
 /* Auth Overlay Specifics */
 .auth-overlay {
     display: flex;
@@ -575,6 +741,19 @@ textarea#command-input:focus {
 
 .input-group {
     margin-bottom: 20px;
+}
+
+.command-url {
+    font-size: 0.9rem;
+    color: var(--primary);
+    margin-bottom: 12px;
+    font-weight: 500;
+    word-break: break-all; /* Allow breaking long URLs */
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Show up to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .input-group label, .hwid-container label {

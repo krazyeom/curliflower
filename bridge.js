@@ -33,20 +33,33 @@
                 const url = urlMatch ? urlMatch[1] : "";
                 
                 let method = "GET";
-                if (curlString.includes("-X POST") || curlString.includes("--data") || curlString.includes("-d ")) {
+                // Even more robust method detection (supports various quote styles and case sensitivity)
+                if (curlString.match(/-X\s+['"]?(POST|PUT|PATCH)['"]?/i) || 
+                    curlString.includes("--data") || 
+                    curlString.includes("-d ") ||
+                    curlString.includes("--data-raw")) {
                     method = "POST";
                 }
                 
                 const headers = {};
-                // Improved header regex to handle different quotes and formats
-                const headerRegex = /-H\s+['"](.*?):\s+(.*?)['"]/g;
+                // Improved header regex to handle different quotes properly
+                const headerRegex = /-H\s+(?:'([^']*)'|"([^"]*)")/g;
                 let match;
                 while ((match = headerRegex.exec(curlString)) !== null) {
-                    headers[match[1]] = match[2];
+                    const h = match[1] || match[2];
+                    if (h) {
+                        const parts = h.split(/:\s*(.*)/);
+                        if (parts.length >= 2) headers[parts[0]] = parts[1];
+                    }
                 }
 
-                const bodyMatch = curlString.match(/--data(-raw|-binary)?\s+['"](.*?)['"]/) || curlString.match(/-d\s+['"](.*?)['"]/);
-                const body = bodyMatch ? bodyMatch[2] : undefined;
+                // Correctly capture body by matching the same type of quote at start and end
+                const bodyMatch = curlString.match(/--data(?:-raw|-binary)?\s+'([^']*)'/) || 
+                                 curlString.match(/--data(?:-raw|-binary)?\s+"([^"]*)"/) ||
+                                 curlString.match(/-d\s+'([^']*)'/) ||
+                                 curlString.match(/-d\s+"([^"]*)"/);
+                
+                const body = bodyMatch ? (bodyMatch[1] || bodyMatch[2]) : undefined;
 
                 return { 
                     success: true, 
@@ -64,22 +77,52 @@
             try {
                 const startTime = Date.now();
                 
-                // Use Capacitor Http for native network access (bypasses CORS)
+                // Filter out problematic headers that should be handled by the native client
+                const safeHeaders = { ...cmd.headers };
+                const headersToRemove = [
+                    'Content-Length', 'content-length',
+                    'Accept-Encoding', 'accept-encoding',
+                    'Connection', 'connection',
+                    'Host', 'host' // Native engine handles Host header automatically
+                ];
+                headersToRemove.forEach(h => delete safeHeaders[h]);
+
+                // Safety: If there is a body, it must be a POST/PUT request
+                let method = (cmd.method || 'GET').toUpperCase();
+                if (cmd.body && method === 'GET') {
+                    method = 'POST';
+                }
+
+                // If on Android, sometimes specific mobile User-Agents work better
+                const userAgent = safeHeaders['User-Agent'] || safeHeaders['user-agent'] || 
+                                 'Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36';
+
+                // Special handling for JSON bodies on Android/Capacitor
+                let requestData = method !== 'GET' ? cmd.body : undefined;
+                if (requestData && typeof requestData === 'string' && 
+                    (safeHeaders['Content-Type'] || '').includes('application/json')) {
+                    try {
+                        // If it's a JSON string, parsing it to an object often works better with CapacitorHttp
+                        requestData = JSON.parse(requestData);
+                    } catch (e) {
+                        // Not valid JSON, send as is
+                    }
+                }
+
                 const options = {
                     url: cmd.url,
-                    method: cmd.method,
+                    method: method,
                     headers: {
-                        ...cmd.headers,
-                        'User-Agent': cmd.headers['User-Agent'] || cmd.headers['user-agent'] || 'Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36'
+                        ...safeHeaders,
+                        'User-Agent': userAgent
                     },
-                    data: cmd.method !== 'GET' ? cmd.body : undefined,
-                    connectTimeout: 10000,
-                    readTimeout: 10000
+                    data: requestData,
+                    connectTimeout: 30000,
+                    readTimeout: 30000,
+                    disableCookies: false 
                 };
-
                 const response = await Http.request(options);
                 const duration = Date.now() - startTime;
-
                 return {
                     success: true,
                     status: response.status,
@@ -87,13 +130,71 @@
                     duration: duration
                 };
             } catch (error) {
-                return {
-                    success: false,
-                    error: error.message
-                };
+                return { success: false, error: error.message };
             }
+        },
+
+        // --- Auth Methods for Mobile ---
+        authCheck: async (cafeId) => {
+            const hwid = await window.api.getHWID();
+            const { data, error } = await supabaseClient
+                .from('licenses')
+                .select('*')
+                .eq('cafe_id', cafeId)
+                .eq('hwid', hwid)
+                .single();
+
+            if (error || !data) return { status: 'NOT_FOUND', hwid };
+            if (data.is_approved) {
+                await Preferences.set({ key: 'is_authorized', value: 'true' });
+                await Preferences.set({ key: 'cafe_id', value: cafeId });
+                return { status: 'APPROVED', data };
+            }
+            return { status: 'PENDING', data };
+        },
+        authRequest: async (cafeId) => {
+            const hwid = await window.api.getHWID();
+            const { data, error } = await supabaseClient
+                .from('licenses')
+                .upsert([{ cafe_id: cafeId, hwid: hwid, is_approved: false }], { onConflict: 'cafe_id,hwid' });
+            
+            if (error) return { success: false, message: error.message };
+            return { success: true };
+        },
+        getStoredAuth: async () => {
+            const isAuth = await Preferences.get({ key: 'is_authorized' });
+            const cId = await Preferences.get({ key: 'cafe_id' });
+            const hwid = await window.api.getHWID();
+            return {
+                isAuthorized: isAuth.value === 'true',
+                cafeId: cId.value || '',
+                hwid: hwid
+            };
+        },
+        logoutAuth: async () => {
+            await Preferences.remove({ key: 'is_authorized' });
+            await Preferences.remove({ key: 'cafe_id' });
+            return { success: true };
+        },
+        getHWID: async () => {
+            const { Device } = Capacitor.Plugins;
+            const info = await Device.getId();
+            return info.identifier; // Unique device ID for Android/iOS
+        },
+        getProxy: async () => {
+            const { value } = await Preferences.get({ key: 'proxy-url' });
+            return value || '';
+        },
+        setProxy: async (url) => {
+            await Preferences.set({ key: 'proxy-url', value: url });
+            return { success: true };
         }
     };
 
-    console.log('Capacitor Bridge Initialized');
+    // Initialize Supabase for Mobile
+    const SUPABASE_URL = 'https://fdcmiqwbihbubsrjhwxy.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_BeiX5hATlw17EqyFw0aiBw_8twbWoYa';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    console.log('Capacitor Bridge Initialized with Auth');
 })();

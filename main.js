@@ -13,17 +13,40 @@ const curliflowerAutoLauncher = new AutoLaunch({
   path: app.getPath('exe'),
 });
 
+const hwid = machineIdSync();
+
 // --- Supabase Auth Settings ---
 const SUPABASE_URL = 'https://fdcmiqwbihbubsrjhwxy.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_BeiX5hATlw17EqyFw0aiBw_8twbWoYa';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const hwid = machineIdSync();
 // ------------------------------
+
+// --- Proxy Setup (Boot time) ---
+const initialProxy = store.get('proxy-url');
+if (initialProxy) {
+  app.commandLine.appendSwitch('proxy-server', initialProxy);
+}
+
+function applyProxy(proxyUrl) {
+  const { session } = require('electron');
+  if (proxyUrl) {
+    session.defaultSession.setProxy({ proxyRules: proxyUrl });
+    console.log(`Proxy applied to session: ${proxyUrl}`);
+  } else {
+    session.defaultSession.setProxy({ proxyRules: '' });
+    console.log('Proxy disabled for session');
+  }
+}
+// ------------------------------
+
+// Disable Hardware Acceleration for stability on some Windows machines
+app.disableHardwareAcceleration();
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 1000,
     height: 700,
+    show: false, // Start hidden to prevent white flash
     titleBarStyle: 'hiddenInset',
     backgroundColor: '#0f1117',
     webPreferences: {
@@ -33,13 +56,17 @@ function createWindow() {
     },
   });
 
-  win.loadFile('index.html');
-  
-  // Open DevTools in development if needed
-  // win.webContents.openDevTools();
+  // Show window only when it is ready to be painted
+  win.once('ready-to-show', () => {
+    win.show();
+  });
+
+  // Use absolute path for loading file to avoid Windows path issues
+  win.loadFile(path.join(__dirname, 'index.html'));
 }
 
 app.whenReady().then(() => {
+  applyProxy(store.get('proxy-url'));
   createWindow();
 
   app.on('activate', () => {
@@ -118,25 +145,43 @@ ipcMain.handle('open-external', (event, url) => {
 ipcMain.handle('execute-request', async (event, cmd) => {
   try {
     const startTime = Date.now();
-    const response = await axios({
-      url: cmd.url,
+    
+    // axios configuration
+    const config = {
       method: cmd.method,
+      url: cmd.url,
       headers: {
         ...cmd.headers,
-        // Ensure User-Agent is sent as provided in curl, bypassing browser restrictions
         'User-Agent': cmd.headers['User-Agent'] || cmd.headers['user-agent'] || 'Mozilla/5.0'
       },
       data: cmd.method !== 'GET' ? cmd.body : undefined,
-      validateStatus: () => true, // Don't throw on error status
-      timeout: 10000,
+      validateStatus: () => true,
+      timeout: 30000,
       responseType: 'text'
-    });
+    };
 
+    // Apply Proxy if set in settings
+    const proxyUrl = store.get('proxy-url');
+    if (proxyUrl) {
+      try {
+        const pUrl = new URL(proxyUrl);
+        config.proxy = {
+          protocol: pUrl.protocol.replace(':', ''),
+          host: pUrl.hostname,
+          port: parseInt(pUrl.port) || (pUrl.protocol === 'https:' ? 443 : 80)
+        };
+        // If it's an HTTPS proxy, we might need an agent, but axios basic proxy handles http/https destinations over http proxy well.
+      } catch (e) {
+        console.error('Proxy parse error for axios:', e);
+      }
+    }
+
+    const response = await axios(config);
     const duration = Date.now() - startTime;
     return {
       success: true,
       status: response.status,
-      data: response.data,
+      data: typeof response.data === 'object' ? JSON.stringify(response.data) : response.data,
       duration: duration
     };
   } catch (error) {
@@ -145,6 +190,16 @@ ipcMain.handle('execute-request', async (event, cmd) => {
       error: error.message
     };
   }
+});
+
+ipcMain.handle('get-proxy', () => {
+  return store.get('proxy-url', '');
+});
+
+ipcMain.handle('set-proxy', (event, url) => {
+  store.set('proxy-url', url);
+  applyProxy(url);
+  return { success: true };
 });
 
 // Manual Run IPC if needed (usually handled in renderer but for logs/persistence main can help)

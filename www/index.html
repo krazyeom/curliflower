@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Curliflower</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Supabase SDK for Mobile/Web -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="dark-theme">
     <div class="app-container">
@@ -20,6 +22,9 @@
                 </div>
                 <div class="nav-item" id="nav-guide" onclick="showTab('guide')">
                     <span class="icon">📖</span> Guide
+                </div>
+                <div class="nav-item" id="nav-settings" onclick="showTab('settings')">
+                    <span class="icon">⚙️</span> Settings
                 </div>
                 <div class="setting-item">
                     <div class="setting-label">
@@ -57,6 +62,11 @@
                     <h2>Request Queue</h2>
                     <button id="add-command-btn" class="btn secondary">+ Add Request</button>
                 </header>
+
+                <!-- Mobile Only Action Button -->
+                <div class="mobile-actions">
+                    <button id="run-all-btn-mobile" class="btn primary full-width">Run All Now</button>
+                </div>
                 
                 <div id="command-list" class="command-list">
                     <!-- Commands will be injected here -->
@@ -94,6 +104,39 @@
                     </section>
                 </div>
             </div>
+            <div id="settings-view" style="display: none;">
+                <header class="content-header">
+                    <h2>Application Settings</h2>
+                </header>
+                <div class="settings-content">
+                    <section class="settings-section">
+                        <h3><span class="icon">🌐</span> Proxy Configuration</h3>
+                        <p class="subtitle">회사 내부망 등 프록시가 필요한 환경에서 설정하세요.</p>
+                        
+                        <div class="input-group">
+                            <label for="proxy-url-input">Proxy URL</label>
+                            <input type="text" id="proxy-url-input" placeholder="예: http://proxy.company.com:8080">
+                        </div>
+                        
+                        <div class="settings-actions">
+                            <button id="save-settings-btn" class="btn primary">Save Settings</button>
+                        </div>
+                        
+                        <div class="info-box">
+                            <span class="icon">ℹ️</span>
+                            <p>안드로이드 모바일 버전은 '시스템 설정 > Wi-Fi'에서 설정된 프록시를 자동으로 사용합니다.</p>
+                        </div>
+                    </section>
+
+                    <section class="settings-section">
+                        <h3><span class="icon">👤</span> Account</h3>
+                        <div class="account-info">
+                            <p>Authorized as: <span id="current-cafe-id" class="highlight">-</span></p>
+                            <button id="logout-btn" class="btn ghost btn-sm">Logout / Reset License</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -111,7 +154,46 @@
         </div>
     </div>
 
+    <!-- Authentication Overlay -->
+    <div id="auth-overlay" class="modal auth-overlay" style="display: none;">
+        <div class="modal-content auth-content">
+            <div class="auth-header">
+                <div class="auth-logo">LTC</div>
+                <h2>Premium Activation</h2>
+            </div>
+            <p class="subtitle">LTC 카페 ID를 입력하고 승인을 요청하세요.</p>
+            
+            <div class="auth-form">
+                <div class="input-group">
+                    <label for="cafe-id-input">LTC Cafe ID</label>
+                    <input type="text" id="cafe-id-input" placeholder="예: krazyeom">
+                </div>
+                <div id="hwid-container" class="hwid-container">
+                    <label>Device ID (ltc ID)</label>
+                    <code id="hwid-display">Generating...</code>
+                    <button class="btn ghost btn-sm" onclick="copyHWID()">Copy</button>
+                </div>
+                
+                <button id="btn-request-auth" class="btn primary full-width">인증 요청 및 확인</button>
+                <div id="auth-status-msg" class="auth-status-msg"></div>
+            </div>
+            
+            <div class="auth-footer">
+                <p>승인 요청 후 관리자(그래염)의 승인을 기다려주세요.</p>
+                <p class="small-text">기기 고유 ID와 카페 ID가 연동되어 중복 사용이 방지됩니다.</p>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
+    <script src="bridge.js"></script>
     <script src="renderer.js"></script>
+    <script>
+        function copyHWID() {
+            const hwid = document.getElementById('hwid-display').innerText;
+            navigator.clipboard.writeText(hwid);
+            alert('Device ID copied to clipboard');
+        }
+    </script>
 </body>
 </html>

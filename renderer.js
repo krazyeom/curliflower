@@ -8,19 +8,42 @@ const autolaunchToggle = document.getElementById('autolaunch-toggle');
 function showTab(tab) {
     const commandView = document.getElementById('command-view');
     const guideView = document.getElementById('guide-view');
+    const settingsView = document.getElementById('settings-view');
     const navCommands = document.getElementById('nav-commands');
     const navGuide = document.getElementById('nav-guide');
+    const navSettings = document.getElementById('nav-settings');
 
-    if (tab === 'commands') {
-        commandView.style.display = 'block';
-        guideView.style.display = 'none';
-        navCommands.classList.add('active');
-        navGuide.classList.remove('active');
-    } else {
-        commandView.style.display = 'none';
-        guideView.style.display = 'block';
-        navCommands.classList.remove('active');
-        navGuide.classList.add('active');
+    commandView.style.display = tab === 'commands' ? 'block' : 'none';
+    guideView.style.display = tab === 'guide' ? 'block' : 'none';
+    settingsView.style.display = tab === 'settings' ? 'block' : 'none';
+
+    navCommands.classList.toggle('active', tab === 'commands');
+    navGuide.classList.toggle('active', tab === 'guide');
+    navSettings.classList.toggle('active', tab === 'settings');
+
+    if (tab === 'settings') {
+        loadSettings();
+    }
+}
+
+async function loadSettings() {
+    const proxy = await window.api.getProxy();
+    document.getElementById('proxy-url-input').value = proxy || '';
+    
+    const auth = await window.api.getStoredAuth();
+    document.getElementById('current-cafe-id').innerText = auth.cafeId || '-';
+}
+
+async function saveSettings() {
+    const proxyUrl = document.getElementById('proxy-url-input').value.trim();
+    await window.api.setProxy(proxyUrl);
+    showToast('Settings saved successfully!');
+}
+
+async function handleLogout() {
+    if (confirm('인증 정보를 초기화하고 로그아웃 하시겠습니까?')) {
+        await window.api.logoutAuth();
+        location.reload();
     }
 }
 
@@ -358,6 +381,11 @@ document.getElementById('add-command-btn').onclick = openModal;
 document.getElementById('close-modal-btn').onclick = closeModal;
 document.getElementById('save-command-btn').onclick = addCommand;
 document.getElementById('run-all-btn').onclick = runAllCommands;
+const mobileRunBtn = document.getElementById('run-all-btn-mobile');
+if (mobileRunBtn) mobileRunBtn.onclick = runAllCommands;
+
+document.getElementById('save-settings-btn').onclick = saveSettings;
+document.getElementById('logout-btn').onclick = handleLogout;
 
 autolaunchToggle.onchange = async (e) => {
     await window.api.setAutoLaunch(e.target.checked);

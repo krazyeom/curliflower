@@ -8,19 +8,42 @@ const autolaunchToggle = document.getElementById('autolaunch-toggle');
 function showTab(tab) {
     const commandView = document.getElementById('command-view');
     const guideView = document.getElementById('guide-view');
+    const settingsView = document.getElementById('settings-view');
     const navCommands = document.getElementById('nav-commands');
     const navGuide = document.getElementById('nav-guide');
+    const navSettings = document.getElementById('nav-settings');
 
-    if (tab === 'commands') {
-        commandView.style.display = 'block';
-        guideView.style.display = 'none';
-        navCommands.classList.add('active');
-        navGuide.classList.remove('active');
-    } else {
-        commandView.style.display = 'none';
-        guideView.style.display = 'block';
-        navCommands.classList.remove('active');
-        navGuide.classList.add('active');
+    commandView.style.display = tab === 'commands' ? 'block' : 'none';
+    guideView.style.display = tab === 'guide' ? 'block' : 'none';
+    settingsView.style.display = tab === 'settings' ? 'block' : 'none';
+
+    navCommands.classList.toggle('active', tab === 'commands');
+    navGuide.classList.toggle('active', tab === 'guide');
+    navSettings.classList.toggle('active', tab === 'settings');
+
+    if (tab === 'settings') {
+        loadSettings();
+    }
+}
+
+async function loadSettings() {
+    const proxy = await window.api.getProxy();
+    document.getElementById('proxy-url-input').value = proxy || '';
+    
+    const auth = await window.api.getStoredAuth();
+    document.getElementById('current-cafe-id').innerText = auth.cafeId || '-';
+}
+
+async function saveSettings() {
+    const proxyUrl = document.getElementById('proxy-url-input').value.trim();
+    await window.api.setProxy(proxyUrl);
+    showToast('Settings saved successfully!');
+}
+
+async function handleLogout() {
+    if (confirm('인증 정보를 초기화하고 로그아웃 하시겠습니까?')) {
+        await window.api.logoutAuth();
+        location.reload();
     }
 }
 
@@ -30,6 +53,9 @@ function openLink(url) {
 
 // Initialize app
 async function init() {
+    // Authentication Check
+    await handleAuthentication();
+
     commands = await window.api.getCommands();
     const isAutolaunch = await window.api.getAutoLaunch();
     autolaunchToggle.checked = isAutolaunch;
@@ -37,12 +63,77 @@ async function init() {
     renderCommands();
 
     // Auto-run on startup logic
-    // We'll mark in sessionStorage that we've auto-run once per window session
     if (!sessionStorage.getItem('autoRunDone')) {
         console.log('App started, auto-running queue...');
         runAllCommands();
         sessionStorage.setItem('autoRunDone', 'true');
     }
+}
+
+async function handleAuthentication() {
+    const authOverlay = document.getElementById('auth-overlay');
+    const cafeIdInput = document.getElementById('cafe-id-input');
+    const hwidDisplay = document.getElementById('hwid-display');
+    const authBtn = document.getElementById('btn-request-auth');
+    const statusMsg = document.getElementById('auth-status-msg');
+
+    const authData = await window.api.getStoredAuth();
+    hwidDisplay.innerText = authData.hwid;
+
+    if (authData.isAuthorized) {
+        // Re-verify with server in background
+        const res = await window.api.authCheck(authData.cafeId);
+        if (res.status === 'APPROVED') {
+            authOverlay.style.display = 'none';
+            return;
+        } else {
+            statusMsg.innerText = '인증이 만료되었거나 승인이 취소되었습니다.';
+            statusMsg.style.color = 'var(--error)';
+        }
+    }
+
+    // Show auth overlay if not authorized or verification failed
+    authOverlay.style.display = 'flex';
+    if (authData.cafeId) cafeIdInput.value = authData.cafeId;
+
+    authBtn.onclick = async () => {
+        const cafeId = cafeIdInput.value.trim();
+        if (!cafeId) return alert('LTC 카페 ID를 입력해주세요.');
+
+        authBtn.disabled = true;
+        authBtn.innerText = 'Checking...';
+        statusMsg.innerText = '서버 확인 중...';
+        statusMsg.style.color = 'white';
+
+        const res = await window.api.authCheck(cafeId);
+        
+        if (res.status === 'APPROVED') {
+            statusMsg.innerText = '✅ 인증 성공! 앱을 시작합니다.';
+            statusMsg.style.color = 'var(--success)';
+            setTimeout(() => {
+                authOverlay.style.display = 'none';
+                location.reload();
+            }, 1500);
+        } else if (res.status === 'PENDING') {
+            statusMsg.innerText = '⏳ 승인 대기 중입니다. 관리자에게 문의하세요.';
+            statusMsg.style.color = 'var(--accent)';
+            authBtn.disabled = false;
+            authBtn.innerText = '다시 확인하기';
+        } else {
+            // Not found, so request it
+            statusMsg.innerText = '인증 요청을 보냅니다...';
+            const req = await window.api.authRequest(cafeId);
+            if (req.success) {
+                statusMsg.innerText = '📩 인증 요청 완료! 승인을 기다려주세요.';
+                statusMsg.style.color = 'var(--accent)';
+                authBtn.innerText = '승인 여부 확인';
+            } else {
+                statusMsg.innerText = '❌ 오류: ' + req.message;
+                statusMsg.style.color = 'var(--error)';
+            }
+            authBtn.disabled = false;
+        }
+    };
 }
 
 // Render the queue
@@ -290,6 +381,11 @@ document.getElementById('add-command-btn').onclick = openModal;
 document.getElementById('close-modal-btn').onclick = closeModal;
 document.getElementById('save-command-btn').onclick = addCommand;
 document.getElementById('run-all-btn').onclick = runAllCommands;
+const mobileRunBtn = document.getElementById('run-all-btn-mobile');
+if (mobileRunBtn) mobileRunBtn.onclick = runAllCommands;
+
+document.getElementById('save-settings-btn').onclick = saveSettings;
+document.getElementById('logout-btn').onclick = handleLogout;
 
 autolaunchToggle.onchange = async (e) => {
     await window.api.setAutoLaunch(e.target.checked);
