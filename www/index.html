@@ -109,7 +109,7 @@
                     <h2>Application Settings</h2>
                 </header>
                 <div class="settings-content">
-                    <section class="settings-section">
+                    <section id="proxy-settings-section" class="settings-section">
                         <h3><span class="icon">🌐</span> Proxy Configuration</h3>
                         <p class="subtitle">회사 내부망 등 프록시가 필요한 환경에서 설정하세요.</p>
                         
@@ -121,11 +121,6 @@
                         <div class="settings-actions">
                             <button id="save-settings-btn" class="btn primary">Save Settings</button>
                         </div>
-                        
-                        <div class="info-box">
-                            <span class="icon">ℹ️</span>
-                            <p>안드로이드 모바일 버전은 '시스템 설정 > Wi-Fi'에서 설정된 프록시를 자동으로 사용합니다.</p>
-                        </div>
                     </section>
 
                     <section class="settings-section">
@@ -133,6 +128,34 @@
                         <div class="account-info">
                             <p>Authorized as: <span id="current-cafe-id" class="highlight">-</span></p>
                             <button id="logout-btn" class="btn ghost btn-sm">Logout / Reset License</button>
+                        </div>
+                    </section>
+
+                    <section class="settings-section about-section">
+                        <h3><span class="icon">ℹ️</span> About Curliflower</h3>
+                        <div class="about-content">
+                            <div class="app-info-row">
+                                <span class="label">Version</span>
+                                <span class="value">v1.0.0</span>
+                            </div>
+                            <div class="app-info-row">
+                                <span class="label">Developer</span>
+                                <span class="value">krazyeom & 그래염 (LTC)</span>
+                            </div>
+                            <div class="app-info-row">
+                                <span class="label">Community</span>
+                                <span class="value">
+                                    <button onclick="openLink('https://cafe.naver.com/thelandscaper')" class="btn secondary btn-sm">Visit LTC Cafe</button>
+                                </span>
+                            </div>
+                            <div class="app-info-row">
+                                <span class="label">Description</span>
+                                <span class="value">Premium multi-request automation tool for fetch and curl.</span>
+                            </div>
+                            <div class="copyright-notice">
+                                <p>© 2026 <strong>krazyeom & 그래염</strong>. All rights reserved.</p>
+                                <p class="small">Powered by Capacitor & Electron</p>
+                            </div>
                         </div>
                     </section>
                 </div>

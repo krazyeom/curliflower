@@ -27,6 +27,13 @@ function showTab(tab) {
 }
 
 async function loadSettings() {
+    const isMobile = !!window.Capacitor;
+    const proxySection = document.getElementById('proxy-settings-section');
+    
+    if (isMobile && proxySection) {
+        proxySection.style.display = 'none';
+    }
+
     const proxy = await window.api.getProxy();
     document.getElementById('proxy-url-input').value = proxy || '';
     
@@ -53,8 +60,17 @@ function openLink(url) {
 
 // Initialize app
 async function init() {
-    // Authentication Check
-    await handleAuthentication();
+    const isMobile = !!window.Capacitor;
+    
+    // Change Settings to Info on mobile
+    if (isMobile) {
+        const navSettings = document.getElementById('nav-settings');
+        if (navSettings) {
+            navSettings.innerHTML = '<span class="icon">ℹ️</span> Info';
+        }
+    }
+
+    const auth = await handleAuthentication();
 
     commands = await window.api.getCommands();
     const isAutolaunch = await window.api.getAutoLaunch();
