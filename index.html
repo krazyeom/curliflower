@@ -188,13 +188,19 @@
             
             <div class="auth-form">
                 <div class="input-group">
+                    <label for="auth-proxy-input">Proxy URL (선택사항, 회사 내부망 등)</label>
+                    <input type="text" id="auth-proxy-input" placeholder="예: http://proxy.company.com:8080">
+                </div>
+                <div class="input-group">
                     <label for="cafe-id-input">LTC Cafe ID</label>
                     <input type="text" id="cafe-id-input" placeholder="예: krazyeom">
                 </div>
-                <div id="hwid-container" class="hwid-container">
-                    <label>Device ID (ltc ID)</label>
-                    <code id="hwid-display">Generating...</code>
-                    <button class="btn ghost btn-sm" onclick="copyHWID()">Copy</button>
+                <div id="hwid-container" class="hwid-container" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <label for="hwid-input" style="margin-bottom: 0;">Device ID (ltc ID)</label>
+                    <div style="display: flex; width: 100%; gap: 8px;">
+                        <input type="text" id="hwid-input" style="flex: 1;" placeholder="Generating...">
+                        <button class="btn ghost btn-sm" onclick="copyHWID()">Copy</button>
+                    </div>
                 </div>
                 
                 <button id="btn-request-auth" class="btn primary full-width">인증 요청 및 확인</button>
@@ -213,7 +219,7 @@
     <script src="renderer.js"></script>
     <script>
         function copyHWID() {
-            const hwid = document.getElementById('hwid-display').innerText;
+            const hwid = document.getElementById('hwid-input').value;
             navigator.clipboard.writeText(hwid);
             alert('Device ID copied to clipboard');
         }

@@ -89,12 +89,13 @@ async function init() {
 async function handleAuthentication() {
     const authOverlay = document.getElementById('auth-overlay');
     const cafeIdInput = document.getElementById('cafe-id-input');
-    const hwidDisplay = document.getElementById('hwid-display');
+    const hwidInput = document.getElementById('hwid-input');
+    const authProxyInput = document.getElementById('auth-proxy-input');
     const authBtn = document.getElementById('btn-request-auth');
     const statusMsg = document.getElementById('auth-status-msg');
 
     const authData = await window.api.getStoredAuth();
-    hwidDisplay.innerText = authData.hwid;
+    hwidInput.value = authData.hwid || '';
 
     if (authData.isAuthorized) {
         // Re-verify with server in background
@@ -112,16 +113,30 @@ async function handleAuthentication() {
     authOverlay.style.display = 'flex';
     if (authData.cafeId) cafeIdInput.value = authData.cafeId;
 
+    // Load existing proxy into the auth proxy input if any
+    const existingProxy = await window.api.getProxy();
+    if (existingProxy) authProxyInput.value = existingProxy;
+
+
     authBtn.onclick = async () => {
         const cafeId = cafeIdInput.value.trim();
+        const hwidOverride = hwidInput.value.trim();
+        const proxyUrl = authProxyInput.value.trim();
+
         if (!cafeId) return alert('LTC 카페 ID를 입력해주세요.');
+        if (!hwidOverride) return alert('Device ID를 입력해주세요.');
 
         authBtn.disabled = true;
         authBtn.innerText = 'Checking...';
         statusMsg.innerText = '서버 확인 중...';
         statusMsg.style.color = 'white';
 
-        const res = await window.api.authCheck(cafeId);
+        // Set proxy before checking auth if it was modified
+        if (proxyUrl !== existingProxy) {
+            await window.api.setProxy(proxyUrl);
+        }
+
+        const res = await window.api.authCheck(cafeId, hwidOverride);
         
         if (res.status === 'APPROVED') {
             statusMsg.innerText = '✅ 인증 성공! 앱을 시작합니다.';
@@ -138,7 +153,7 @@ async function handleAuthentication() {
         } else {
             // Not found, so request it
             statusMsg.innerText = '인증 요청을 보냅니다...';
-            const req = await window.api.authRequest(cafeId);
+            const req = await window.api.authRequest(cafeId, hwidOverride);
             if (req.success) {
                 statusMsg.innerText = '📩 인증 요청 완료! 승인을 기다려주세요.';
                 statusMsg.style.color = 'var(--accent)';

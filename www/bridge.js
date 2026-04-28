@@ -135,8 +135,10 @@
         },
 
         // --- Auth Methods for Mobile ---
-        authCheck: async (cafeId) => {
-            const hwid = await window.api.getHWID();
+        authCheck: async (cafeId, hwidOverride) => {
+            const hwid = hwidOverride || await window.api.getHWID();
+            if (hwidOverride) await Preferences.set({ key: 'hwid', value: hwidOverride });
+
             const { data, error } = await supabaseClient
                 .from('licenses')
                 .select('*')
@@ -152,8 +154,10 @@
             }
             return { status: 'PENDING', data };
         },
-        authRequest: async (cafeId) => {
-            const hwid = await window.api.getHWID();
+        authRequest: async (cafeId, hwidOverride) => {
+            const hwid = hwidOverride || await window.api.getHWID();
+            if (hwidOverride) await Preferences.set({ key: 'hwid', value: hwidOverride });
+
             const { data, error } = await supabaseClient
                 .from('licenses')
                 .upsert([{ cafe_id: cafeId, hwid: hwid, is_approved: false }], { onConflict: 'cafe_id,hwid' });
@@ -174,9 +178,13 @@
         logoutAuth: async () => {
             await Preferences.remove({ key: 'is_authorized' });
             await Preferences.remove({ key: 'cafe_id' });
+            await Preferences.remove({ key: 'hwid' });
             return { success: true };
         },
         getHWID: async () => {
+            const stored = await Preferences.get({ key: 'hwid' });
+            if (stored.value) return stored.value;
+
             const { Device } = Capacitor.Plugins;
             const info = await Device.getId();
             return info.identifier; // Unique device ID for Android/iOS

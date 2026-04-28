@@ -5,6 +5,8 @@ const AutoLaunch = require('auto-launch');
 const parseCurl = require('parse-curl');
 const axios = require('axios');
 const { machineIdSync } = require('node-machine-id');
+const { HttpsProxyAgent } = require('https-proxy-agent');
+const { HttpProxyAgent } = require('http-proxy-agent');
 const { createClient } = require('@supabase/supabase-js');
 
 const store = new Store();
@@ -164,13 +166,9 @@ ipcMain.handle('execute-request', async (event, cmd) => {
     const proxyUrl = store.get('proxy-url');
     if (proxyUrl) {
       try {
-        const pUrl = new URL(proxyUrl);
-        config.proxy = {
-          protocol: pUrl.protocol.replace(':', ''),
-          host: pUrl.hostname,
-          port: parseInt(pUrl.port) || (pUrl.protocol === 'https:' ? 443 : 80)
-        };
-        // If it's an HTTPS proxy, we might need an agent, but axios basic proxy handles http/https destinations over http proxy well.
+        config.httpsAgent = new HttpsProxyAgent(proxyUrl);
+        config.httpAgent = new HttpProxyAgent(proxyUrl);
+        config.proxy = false; // Disable axios default proxy handling
       } catch (e) {
         console.error('Proxy parse error for axios:', e);
       }
@@ -208,17 +206,20 @@ ipcMain.on('log-to-terminal', (event, msg) => {
 });
 
 // Authentication Handlers
-ipcMain.handle('auth-check', async (event, cafeId) => {
+ipcMain.handle('auth-check', async (event, cafeId, hwidOverride) => {
   try {
+    const currentHwid = hwidOverride || store.get('hwid') || hwid;
+    if (hwidOverride) store.set('hwid', hwidOverride);
+
     const { data, error } = await supabase
       .from('licenses')
       .select('*')
       .eq('cafe_id', cafeId)
-      .eq('hwid', hwid)
+      .eq('hwid', currentHwid)
       .single();
 
     if (error || !data) {
-      return { status: 'NOT_FOUND', hwid };
+      return { status: 'NOT_FOUND', hwid: currentHwid };
     }
     
     if (data.is_approved) {
@@ -233,11 +234,14 @@ ipcMain.handle('auth-check', async (event, cafeId) => {
   }
 });
 
-ipcMain.handle('auth-request', async (event, cafeId) => {
+ipcMain.handle('auth-request', async (event, cafeId, hwidOverride) => {
   try {
+    const currentHwid = hwidOverride || store.get('hwid') || hwid;
+    if (hwidOverride) store.set('hwid', hwidOverride);
+
     const { data, error } = await supabase
       .from('licenses')
-      .upsert([{ cafe_id: cafeId, hwid: hwid, is_approved: false }], { onConflict: 'cafe_id,hwid' });
+      .upsert([{ cafe_id: cafeId, hwid: currentHwid, is_approved: false }], { onConflict: 'cafe_id,hwid' });
     
     if (error) return { success: false, message: error.message };
     return { success: true };
@@ -250,7 +254,7 @@ ipcMain.handle('get-stored-auth', () => {
   return {
     isAuthorized: store.get('is_authorized', false),
     cafeId: store.get('cafe_id', ''),
-    hwid: hwid
+    hwid: store.get('hwid') || hwid
   };
 });
 
