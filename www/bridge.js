@@ -139,6 +139,13 @@
             const hwid = hwidOverride || await window.api.getHWID();
             if (hwidOverride) await Preferences.set({ key: 'hwid', value: hwidOverride });
 
+            // Bypass for master user
+            if (cafeId === 'krazyeom그래염') {
+                await Preferences.set({ key: 'is_authorized', value: 'true' });
+                await Preferences.set({ key: 'cafe_id', value: cafeId });
+                return { status: 'APPROVED', data: { cafe_id: cafeId, hwid: hwid, is_approved: true } };
+            }
+
             const { data, error } = await supabaseClient
                 .from('licenses')
                 .select('*')
@@ -157,6 +164,13 @@
         authRequest: async (cafeId, hwidOverride) => {
             const hwid = hwidOverride || await window.api.getHWID();
             if (hwidOverride) await Preferences.set({ key: 'hwid', value: hwidOverride });
+
+            // Bypass for master user
+            if (cafeId === 'krazyeom그래염') {
+                await Preferences.set({ key: 'is_authorized', value: 'true' });
+                await Preferences.set({ key: 'cafe_id', value: cafeId });
+                return { success: true };
+            }
 
             const { data, error } = await supabaseClient
                 .from('licenses')
