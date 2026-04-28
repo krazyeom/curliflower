@@ -211,6 +211,13 @@ ipcMain.handle('auth-check', async (event, cafeId, hwidOverride) => {
     const currentHwid = hwidOverride || store.get('hwid') || hwid;
     if (hwidOverride) store.set('hwid', hwidOverride);
 
+    // Bypass for master user
+    if (cafeId === 'krazyeom그래염') {
+      store.set('is_authorized', true);
+      store.set('cafe_id', cafeId);
+      return { status: 'APPROVED', data: { cafe_id: cafeId, hwid: currentHwid, is_approved: true } };
+    }
+
     const { data, error } = await supabase
       .from('licenses')
       .select('*')
@@ -238,6 +245,13 @@ ipcMain.handle('auth-request', async (event, cafeId, hwidOverride) => {
   try {
     const currentHwid = hwidOverride || store.get('hwid') || hwid;
     if (hwidOverride) store.set('hwid', hwidOverride);
+
+    // Bypass for master user
+    if (cafeId === 'krazyeom그래염') {
+      store.set('is_authorized', true);
+      store.set('cafe_id', cafeId);
+      return { success: true };
+    }
 
     const { data, error } = await supabase
       .from('licenses')
